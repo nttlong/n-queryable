@@ -2,7 +2,7 @@ var e=require("./expr");
 var sync=require("./sync");
 var mg=require("mongodb");
 var aggr=require("./aggr");
-
+global.__q_coll_database__={};
 
 function connect(uri,cb){
     function exec(cb){
@@ -16,18 +16,22 @@ function connect(uri,cb){
     if(cb) exec(cb);
     else return sync.sync(exec,[]);
 }
-function coll(db,name){
-    this.db=db;
+function db(name,uri){
+    if (global.__q_coll_database__[name]){
+        return global.__q_coll_database__[name]; 
+    }
+    else {
+        global.__q_coll_database__[name]=connect(uri);
+        return global.__q_coll_database__[name]; 
+    }
+}
+function coll(_db,name){
+    if(typeof _db=="string"){
+        _db=db(_db);
+    }
+    this.db = _db;
     this.name=name;
     this.__aggr=undefined;
-}
-coll.prototype.setDb=function(db){
-    this.db=db;
-    return this;
-};
-coll.prototype.setName=function(name){
-    this.name=name;
-    return this;
 }
 coll.prototype.where=function(){
     if(arguments.length==0){
@@ -139,12 +143,12 @@ coll.prototype.commit=function(cb){
 coll.prototype.set=function(data){
     var me=this;
     if(!me.__set){
-        me.__set = data;
+        me.__set = {};
     }
-    else {
-        var keys=Object.keys(data);
-        for(var i=0;i<keys.length;i++){
-            me.__set[keys[i]]=data[keys[i]];
+    var keys = Object.keys(data);
+    for (var i = 0; i < keys.length; i++) {
+        if (keys[i] != "_id") {
+            me.__set[keys[i]] = data[keys[i]];
         }
     }
     return this;
@@ -199,5 +203,6 @@ module.exports ={
     coll:function(db,name){
         return new coll(db,name);
     },
-    connect:connect
+    connect:connect,
+    db:db
 }
