@@ -32,6 +32,67 @@ aggr.prototype.project=function(){
     return this;
 
 };
+aggr.prototype.match=function(){
+    var _expr=arguments[0];
+    var params=[];
+    for(var i=1;i<arguments.length;i++){
+        params.push(arguments[i]);
+    }
+    this.__pipe.push({
+        $match: expr.filter(_expr,params)
+    });
+    return this;
+};
+aggr.prototype.unwind = function (field, preserveNullAndEmptyArrays){
+    if (preserveNullAndEmptyArrays==undefined){
+        preserveNullAndEmptyArrays=false;
+    }
+    this.__pipe.push({
+        path: "$" + field,
+        preserveNullAndEmptyArrays: preserveNullAndEmptyArrays
+    });
+    return this;
+};
+aggr.prototype.sort=function(fields){
+    this.__pipe.push({
+        $sort:fields
+    });
+    return this;
+};
+aggr.prototype.limit=function(num){
+    this.__pipe.push(
+        {$limit:num}
+    );
+    return this;
+};
+aggr.prototype.replaceRoot=function(newRoot){
+    this.__pipe.push(
+        {
+            $replaceRoot:{
+                newRoot:"$"+newRoot
+            }
+        }
+    );
+    return this;
+};
+aggr.prototype.skip=function(num){
+    this.__pipe.push(
+        { $skip: num }
+    );
+    return this;
+};
+aggr.prototype.lookup=function(source,localField,foreignField,alias){
+    var lookup={};
+    lookup.source=source;
+    lookup.localField=localField;
+    lookup.foreignField = foreignField;
+    lookup["as"]=alias;
+    this.__pipe.push({
+        $lookup:lookup
+    });
+    return this;
+
+};
 aggr.prototype.items=function(cb){
     var me=this;
     function exec(cb){

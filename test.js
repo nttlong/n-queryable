@@ -8,6 +8,7 @@ var a=q.aggregate().project({
     Code:1,
     Name:"concat(Code,{0},Name)"
 }," ");
+a.match("contains(Name,{0})","123");
 
 //q.where("_id==objectId({0})", "5ba7350b5c2bc29acca54dce");
 //var ret=q.delete();

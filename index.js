@@ -21,6 +21,14 @@ function coll(db,name){
     this.name=name;
     this.__aggr=undefined;
 }
+coll.prototype.setDb=function(db){
+    this.db=db;
+    return this;
+};
+coll.prototype.setName=function(name){
+    this.name=name;
+    return this;
+}
 coll.prototype.where=function(){
     if(arguments.length==0){
         throw("Param is missing");
