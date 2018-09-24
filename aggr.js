@@ -193,8 +193,11 @@ aggr.prototype.page=function(pageIndex,pageSize,cb){
                     ret.totalItems=r[0].totalItems;
                     cb(null,r[0].totalItems);
                 }
+                else {
+                    cb(null,0);
+                }
             }
-        })
+        });
     },function(cb){
         coll.aggregate(tmpPager).toArray(function(e,r){
             ret.items=r;

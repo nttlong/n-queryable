@@ -28,6 +28,6 @@ var a=q.aggregate();
 //     "store location" :"$location",
 //     "has bananas" :"not(in({0},in_stock))"
 // },"bananas")
-a.match("in_stock[1]=={0)","cantaloupes");
+a.match("in_stock[0]=={0})","cantaloupes");
 console.log(JSON.stringify(a.__pipe));
 console.log(a.items());
