@@ -24,9 +24,10 @@ var a=q.aggregate();
 ])
  */
 
-a.project({
-    "store location" :"$location",
-    "has bananas" :"not(in({0},in_stock))"
-},"bananas");
+// a.project({
+//     "store location" :"$location",
+//     "has bananas" :"not(in({0},in_stock))"
+// },"bananas")
+a.match("in_stock[1]=={0)","cantaloupes");
 console.log(JSON.stringify(a.__pipe));
 console.log(a.items());
