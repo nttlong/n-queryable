@@ -54,154 +54,98 @@ function sync(fn, args, cb) {
         }
     }
 };
-var _callers = {}
-/**
- * 
- * @param {Function} fn 
- * @param {Function} callback 
- * @param {string} fileName 
- */
-function exec(fn, callback, fileName, noneException) {
-    if (fileName) {
-        function run(cb) {
-            var xFileName = fileName;
-
-            try {
-                fn(function (err, result) {
-                    if (err) {
-                        if (noneException) {
-                            cb(null, {
-                                error: err
-                            });
-                        }
-                        else {
-                            cb(err);
-                        }
-
-                    }
-                    else {
-                        if (noneException) {
-                            if (Object.keys(result).length > 2) {
-                                require("../q-exception").next(new Error("The callback function:\r\n" + fn.toString() + "\r\n must return an object with result and error"), __filename);
-                            }
-                            else {
-                                if (result.result === undefined) {
-                                    require("../q-exception").next(new Error("The callback function:\r\n" + fn.toString() + "\r\n must return an object with result and error"), __filename);
-                                }
-                                else if (result.error === undefined) {
-                                    require("../q-exception").next(new Error("The callback function:\r\n" + fn.toString() + "\r\n must return an object with result and error"), __filename);
-                                }
-                                cb(null, { result: result });
-                            }
-                        }
-                        else {
-                            cb(null, result);
-                        }
-                    }
-                });
-
-            } catch (error) {
-                if (noneException) {
-
-                }
-                else {
-                    var err = new Error("\r\n Error:'" + xFileName + "'\r\n" +
-                        "error :\r\n'" +
-                        error.message + "\r\n at declare :\r\n" +
-                        fn.toString());
-                    require("../q-exception").next(err, __filename);
-                }
-
-
-            }
-
-        }
-        if (callback) {
-            if (noneException) {
-                try {
-                    fn(function (err, result) {
-                        if (err) {
-                            callback(null, {
-                                error: err
-                            });
-                        }
-                        else {
-                            callback(null, { result: result });
-                        }
-                    });
-                } catch (error) {
-                    callback(null, {
-                        error: error
-                    });
-
-                }
-
-            }
-            else {
-                try {
-                    fn(callback)
-                } catch (error) {
-                    require("../q-exception").next(errors, __filename);
-                }
-
-            }
-
-        }
-        else {
-            return sync(run, []);
-        }
-
+function CallerResult(fn,args,promiseCaller,callback){
+    this.__fn=fn;
+    this.__args=args;
+    this.__promiseCaller=promiseCaller;
+    this.__callback=callback;
+}
+CallerResult.prototype.sync=function(){
+    var me=this;
+    function exec(cb){
+        me.__callback(cb);
     }
-    else {
-        function run(cb) {
-
-            try {
-                fn(cb);
-
-            } catch (error) {
-                require("../q-exception").next(new Error("\r\n" +
-                    "error :\r\n'" +
-                    error.message + "\r\n at declare :\r\n" +
-                    fn.toString()), __filename);
-            }
-
-        }
-        if (callback) {
-            if (noneException) {
-                try {
-                    fn(function (err, result) {
-                        if (err) {
-                            callback(null, {
-                                error: err
-                            });
-                        }
-                        else {
-                            callback(null, { result: result });
-                        }
-                    });
-                } catch (error) {
-                    callback(null, {
-                        error: error
-                    });
-
-                }
-
-            }
-            else {
-                try {
-                    fn(callback)
-                } catch (error) {
-                    require("../q-exception").next(errors, __filename);
-                }
-
-            }
-        }
-        else {
-            return sync(run, []);
+    return sync(exec,[]);
+}
+CallerResult.prototype.then=function(cb){
+    if(!this.__promise){
+        this.__promise=new Promise(this.__promiseCaller);
+    }
+    return this.__promise.then(cb);
+}
+CallerResult.prototype.promise=function(){
+    return new Promise(this.__promiseCaller);
+}
+CallerResult.prototype.catch=function(cb){
+    if(!this.__promise){
+        this.__promise=new Promise(this.__promiseCaller);
+    }
+    return this.promise.catch(cb);
+}
+CallerResult.prototype.call=function(cb){
+    return this.callback(cb);
+}
+function Executor(){
+    this.__functions=[];
+    if(arguments.length>0){
+        for(var i=0;i<arguments[0].length;i++){
+            this.call(arguments[0][i]);
         }
     }
+    
+}
+Executor.prototype.call=function(){
+    
+    this.__functions.push(caller.apply(caller,arguments).promise());
+    return this;
+}
+Executor.prototype.then=function(cb){
+    if(!this.__allPromise){
+        this.__allPromise = Promise.all(this.__functions);
+    }
+    return this.__allPromise.then(cb);
+}
+Executor.prototype.callback=function(cb){
+    Promise.all(this.__functions).then(function(r){
+        cb(null,r);
+    }).catch(function(ex){
+        cb(ex);
+    });
+}
+Executor.prototype.sync=function(){
+    var me=this;
+    function exec(cb){
+        me.callback(cb);
+    }
+    return sync(exec,[]);
+}
+function caller(){
+    var fn=arguments[arguments.length-1];
+    var args=[];
+    for(var i=0;i<arguments.length-1;i++){
+        args.push(arguments[i]);
+    }
+    function callback(cb){
+        args.push(cb);
+        fn.apply(fn,args);
+    }
+    var promiseCaller= function(resolve,reject){
+        function cb(e,r){
+            if(e) reject(e);
+            else {
+                resolve(r);
+            }
+        }
+        args.push(cb);
+        fn.apply(fn,args);
+    };
+    return new CallerResult(fn,args,promiseCaller,callback)
+}
+function parallel(){
+    return new Executor(arguments);
 }
 module.exports = {
     sync: sync,
-    exec: exec
+    caller:caller,
+    parallel:parallel
 }

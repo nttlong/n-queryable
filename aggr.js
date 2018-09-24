@@ -96,7 +96,7 @@ aggr.prototype.lookup=function(source,localField,foreignField,alias){
 aggr.prototype.items=function(cb){
     var me=this;
     function exec(cb){
-        me.db.collection(me.name).aggregate(me.__pipe).toArray(function(e,r){
+        me.db.collection(me.name).aggregate(me.__pipe,{allowDiskUse:true}).toArray(function(e,r){
             me.__pipe =[];
             cb(e,r);
         });
@@ -125,6 +125,44 @@ aggr.prototype.item=function(cb){
     if (cb) exec(cb);
     else {
         return sync.sync(exec, []);
+    }
+};
+aggr.prototype.count=function(cb){
+    var tmp=[];
+    for(var i=0;i<this.__pipe.length;i++){
+        tmp.push(this.__pipe[i]);
+    }
+    this.__pipe.push({
+        $count:"totalItems"
+    });
+    var me=this;
+    function exec(cb){
+        me.db.collection(me.name).aggregate(me.__pipe).toArray(function(e,r){
+            me.__pipe=tmp;
+            if(e){
+                cb(e);
+            }
+            else {
+                if(r.length>0){
+                    cb(null,r[0].totalItems);
+                }
+                else {
+                    cb(null,0);
+                }
+                
+            }
+        });
+    }
+    if(cb) exec(cb);
+    else{
+        return sync.sync(exec,[])
+    }
+
+}
+aggr.prototype.page=function(pageIndex,pageSize,cb){
+    var tmp=[];
+    for(var i=0;i<this.this.__pipe.length;i++){
+        tmp
     }
 };
 module.exports = function (db, name) {
