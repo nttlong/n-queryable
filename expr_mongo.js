@@ -15,10 +15,13 @@ const operators = {
     "or": "$or"
 
 };
-const avg_functions=";sum;min;max;avg;stdDevPop;stdDevSamp;meta;first;last;";
+const avg_functions=";sum;min;max;avg;stdDevPop;stdDevSamp;meta;first;last;not;";
 var functions =";contains;start;end;objectId;elemMatch;if;switch;case;";
 function parseToMongo(fx,params,prefix){
     var ret ={}
+    if(fx.type==="ParenthesisNode"){
+        return parseToMongo(fx.content,params,prefix);
+    }
     if (fx.type =="SymbolNode"){
         ret=fx.name;
         while (ret.indexOf("_$$$$_dot_$$$$_")>-1){
@@ -31,7 +34,7 @@ function parseToMongo(fx,params,prefix){
     }
     if (fx.type =="FunctionNode"){
 
-        if(functions.indexOf(fx.name)>-1){
+        if(functions.indexOf(";"+fx.name+";")>-1){
             return fn(fx,params,prefix,parseToMongo);
 
         }
@@ -44,7 +47,7 @@ function parseToMongo(fx,params,prefix){
                 "$expr": parseToMongo(fx.args[0], params)
             };
         }
-        else if (avg_functions.indexOf(fx.name)>-1){
+        else if (avg_functions.indexOf(";"+fx.name+";")>-1){
             ret["$" + fx.name]=parseToMongo(fx.args[0], params,"$");
             return ret;
         }
@@ -62,6 +65,11 @@ function parseToMongo(fx,params,prefix){
     if (fx.type =="OperatorNode"){
         
         var left = parseToMongo(fx.args[0], params);
+        if(fx.op==="not"){
+            return {
+                $not:left
+            };   
+        }
         ret[left] = {};
         
         if(typeof left=="string" && fx.op==="=="){
