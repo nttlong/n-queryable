@@ -3,21 +3,27 @@ var MongoClient = require('mongodb').MongoClient;
 
 
 // var expr=require("./expr");
-// var x=require("./index");
+var x=require("./index");
 var cnn2 = "mongodb://sys:123456@172.16.7.67:27017/lms" //"mongodb://root:123456@localhost:27017/hrm";
+var db=x.connect(cnn2);
+var q=x.coll(db,"sys.trackings");
+var ret=q.aggregate().sort({
+    track_on:-1
+}).page(0,50);
+console.log(ret);
 // MongoClient.connect(cnn2,(e,db)=>{
 //     var x=db;
 // })
-var cnn=p.caller(cnn2, MongoClient.connect).sync();
-var db=cnn.db("lms");
+// var cnn=p.caller(cnn2, MongoClient.connect).sync();
+// var db=cnn.db("lms");
 
- var coll=db.collection("sys.tracking");
+//  var coll=db.collection("sys.tracking");
  
-var items=p.caller((cb)=>{
-    coll.find({}).toArray(cb);
-}).sync();
-// console.log(cnn);
-console.log(items);
+// var items=p.caller((cb)=>{
+//     coll.find({}).toArray(cb);
+// }).sync();
+// // console.log(cnn);
+// console.log(items);
 // var cnn3 = "mongodb://sys:123456@172.16.7.67:27017/lms";
 
 // var ret=p.parallel(cb=>{
@@ -51,7 +57,7 @@ console.log(items);
 //     throw(error);
 // }
 
-// var q=x.coll(db,"sys.trackings");
+// 
 // var a=q.aggregate().sort({
 //     track_on:-1
 // }).sort({

@@ -160,9 +160,52 @@ aggr.prototype.count=function(cb){
 
 }
 aggr.prototype.page=function(pageIndex,pageSize,cb){
-    var tmp=[];
-    for(var i=0;i<this.this.__pipe.length;i++){
-        tmp
+    var ret={
+        totalItems:0,
+        pageIndex:pageIndex,
+        pageSize:pageSize,
+        items:[]
+    };
+    var tmpPager=[];
+    var tmpCount=[];
+    for(var i=0;i<this.__pipe.length;i++){
+        tmpPager.push(this.__pipe[i]);
+        tmpCount.push(this.__pipe[i]);
+    }
+    tmpCount.push({
+        $count:"totalItems"
+    });
+    tmpPager.push({
+        $skip:pageIndex*pageSize
+    });
+    tmpPager.push({
+        $limit:pageSize
+    });
+    var coll=this.db.collection(this.name);
+    var caller=sync.parallel(function(cb){
+        coll.aggregate(tmpCount).toArray(function(e,r){
+            if(e) cb (e);
+            else {
+                if(r.length>0){
+                    ret.totalItems=r[0].totalItems;
+                    cb(null,r[0].totalItems);
+                }
+            }
+        })
+    },function(cb){
+        coll.aggregate(tmpPager).toArray(function(e,r){
+            ret.items=r;
+            cb(e,r);
+        });
+    });
+    if(cb){
+        caller.callback(function(e,r){
+           cb(e,ret); 
+        });
+    }
+    else {
+        caller.sync();
+        return ret;
     }
 };
 module.exports = function (db, name) {
