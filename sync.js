@@ -95,7 +95,6 @@ function Executor(){
     
 }
 Executor.prototype.call=function(){
-    
     this.__functions.push(caller.apply(caller,arguments).promise());
     return this;
 }

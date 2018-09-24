@@ -5,6 +5,9 @@ function aggr(db,name){
     this.name=name;
     this.__pipe=[];
 }
+/**
+ * Project
+ */
 aggr.prototype.project=function(){
     var fields;
     var  params=[];
@@ -207,6 +210,51 @@ aggr.prototype.page=function(pageIndex,pageSize,cb){
         caller.sync();
         return ret;
     }
+};
+/**
+ * Group
+ */
+aggr.prototype.group=function(){
+    var info=arguments[0];
+    var params=[];
+    for(var i=1;i<arguments.length;i++){
+        params.push(arguments[i]);
+    }
+    var _id=info._id||{};
+    var group={_id:{}};
+    if(typeof _id==="string"){
+        group._id=id;
+    }
+    else {
+        var keys=Object.keys(_id);
+        for(var i=0;i<keys.length;i++){
+            var key =keys[i];
+            var val=_id[key];
+            if(typeof val ==="string"){
+                group._id[key]=expr.filter(val,params);
+            }
+            else {
+                group._id[key]=val;
+            }
+        }
+    }
+    var keys = Object.keys(info);
+    for(var i=0;i<keys.length;i++){
+        var key=keys[i];
+        if(key!="_id"){
+            var val=info[key];
+            if(typeof val ==="string"){
+                group[key]=expr.filter(val,params);
+            }
+            else {
+                group[key]=val;
+            }
+        }
+    }
+    this.__pipe.push({
+        $group:group
+    });
+    return this;
 };
 module.exports = function (db, name) {
     return new aggr(db, name);

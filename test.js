@@ -4,13 +4,14 @@ var MongoClient = require('mongodb').MongoClient;
 
 // var expr=require("./expr");
 var x=require("./index");
-var cnn2 = "mongodb://sys:123456@172.16.7.67:27017/lms" //"mongodb://root:123456@localhost:27017/hrm";
-var db=x.connect(cnn2);
+var cnn2 = "mongodb://sys:123456@172.16.7.67:27017/lms" 
+var cnn="mongodb://root:123456@localhost:27017/hrm";
+var db=x.connect(cnn);
 var q=x.coll(db,"sys.trackings");
-var ret=q.aggregate().sort({
-    track_on:-1
-}).page(0,50);
-console.log(ret);
+// var ret=q.aggregate().sort({
+//     track_on:-1
+// }).page(0,50);
+// console.log(ret);
 // MongoClient.connect(cnn2,(e,db)=>{
 //     var x=db;
 // })

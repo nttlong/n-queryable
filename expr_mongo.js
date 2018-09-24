@@ -15,7 +15,8 @@ const operators = {
     "or": "$or"
 
 };
-var functions ="contains,start,end,objectId,elemMatch";
+const avg_functions=";sum;min;max;avg;stdDevPop;stdDevSamp;meta;first;last;";
+var functions =";contains;start;end;objectId;elemMatch;if;switch;case;";
 function parseToMongo(fx,params,prefix){
     var ret ={}
     if (fx.type =="SymbolNode"){
@@ -43,6 +44,10 @@ function parseToMongo(fx,params,prefix){
                 "$expr": parseToMongo(fx.args[0], params)
             };
         }
+        else if (avg_functions.indexOf(fx.name)>-1){
+            ret["$" + fx.name]=parseToMongo(fx.args[0], params,"$");
+            return ret;
+        }
         else {
             ret["$" + fx.name] = [];
             for (var i = 0; i < fx.args.length; i++) {
@@ -58,24 +63,25 @@ function parseToMongo(fx,params,prefix){
         
         var left = parseToMongo(fx.args[0], params);
         ret[left] = {};
-        var right = parseToMongo(fx.args[1], params);
-        if(typeof left=="string"){
+        
+        if(typeof left=="string" && fx.op==="=="){
+            var right = parseToMongo(fx.args[1], params);
             ret[left][operators[fx.op]] = right;
-            if(fx.op==="=="){
-                if (typeof right == "string") {
-                    ret = {};
-                    ret[left] = { $regex: new RegExp("^" + right + "$", "i") };
-                    return ret;
-                }
-                else {
-                    ret = {};
-                    ret[left] =  right ;
-                    return ret;
-                }
+            if (typeof right == "string") {
+                ret = {};
+                ret[left] = { $regex: new RegExp("^" + right + "$", "i") };
+                return ret;
+            }
+            else {
+                ret = {};
+                ret[left] =  right ;
+                return ret;
             }
                 
         }
         else {
+            var left = parseToMongo(fx.args[0], params,"$");
+            var right = parseToMongo(fx.args[1], params,"$");
             ret={}
             ret[operators[fx.op]]=[left,right];
         }
