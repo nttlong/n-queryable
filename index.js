@@ -3,6 +3,7 @@ var sync=require("./sync");
 var mg=require("mongodb");
 var aggr=require("./aggr");
 var utils=require("./utils");
+
 global.__q_coll_database__={};
 
 function connect(uri,cb){
@@ -207,5 +208,14 @@ module.exports ={
         return new coll(db,name);
     },
     connect:connect,
-    db:db
+    db:db,
+    es:function(key,index,type){
+        var ES=require("./es");
+        return ES.create(key,index,type);
+    },
+    esConnect:function(key,urls){
+        var ES=require("./es");
+        return ES.connect(key,urls);
+    }
+
 }
