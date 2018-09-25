@@ -105,7 +105,7 @@ coll.prototype.commit=function(cb){
                     else {
                         data._id = r.insertedId;
                         me.__insert = undefined;
-                        cb(e, r);
+                        cb(e, data);
                     }
                 });
             }
