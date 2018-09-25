@@ -63,12 +63,38 @@ function postData(key,index,type,id,body,cb){
         return sync.sync(exec,[]);
     }
 };
-function search(key,index,type,searchText,cb){
+function search(key,index,type,searchText,pageSize,pageIndex,cb){
     function exec(cb){
         getClient(key).search({
             index: index,
             type: type,
+            from : pageIndex*pageSize,
+            size : pageIndex,
             q: searchText
+        }).then(function(res) {
+            cb(undefined,res.hits);
+        }, function(err) {
+            cb(err);
+        });
+    }
+    if(cb) exec(cb);
+    else {
+        return sync.sync(exec,[]);
+    }
+}
+function searchByField(key,index,type,field,searchText,pageSize,pageIndex,cb){
+    var query={term:{}};
+    query.term[field]=searchText;
+    function exec(cb){
+        getClient(key).search({
+            index: index,
+            type: type,
+            from : pageIndex*pageSize,
+            size : pageIndex,
+            body:{
+                query : query
+            }
+            
         }).then(function(res) {
             cb(undefined,res.hits);
         }, function(err) {
@@ -177,5 +203,6 @@ module.exports = {
     getAll:getAll,
     createIndex:createIndex,
     deleteIndex:deleteIndex,
-    isExist:isExist
+    isExist:isExist,
+    searchByField:searchByField
 }

@@ -67,7 +67,7 @@ var coll=mg.coll(db,"lv.languages_resource");
 //var r=es.getAll("main","test","default");
 // var r= es.search("main","test","default","Login")
 //var ret=esObj.getAll();
-var ret=esObj.search("truc tiep");
+var ret=esObj.searchByField("Caption","login",0,20);
 var id=[];
 for(var i=0;i<ret.hits.length;i++){
     id.push(ObjectID(ret.hits[i]._id));

@@ -22,9 +22,13 @@ ES.prototype.delete=function(id,db){
     this.init();
     return es.deleteData(data,cb)
 };
-ES.prototype.search=function(txt,cb){
+ES.prototype.search=function(txt,pageSize,pageIndex,cb){
     this.init();
-    return es.search(this.key,this.index,this.type,txt,cb);
+    return es.search(this.key,this.index,this.type,txt,pageSize,pageIndex,cb);
+};
+ES.prototype.searchByField=function(field,txt,pageSize,pageIndex,cb){
+    this.init();
+    return es.searchByField(this.key,this.index,this.type,field,txt,pageSize,pageIndex,cb);
 };
 ES.prototype.getAll=function(cb){
     this.init();
