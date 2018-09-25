@@ -6,9 +6,11 @@ function connect(key,urls){
     if(!global.__es_query_connections){
         global.__es_query_connections={};
     }
-    global.__es_query_connections[key]=new elasticsearch.Client( {  
-        hosts: urls
-      });
+    if(!global.__es_query_connections[key]){
+        global.__es_query_connections[key]=new elasticsearch.Client( {  
+            hosts: urls
+        });
+    }
 }
 function getCnnNames(){
     return Object.keys(lobal.__es_query_connections);
