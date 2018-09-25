@@ -7,6 +7,18 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "test_es_query",
+            "program": "${workspaceFolder}/test_es_query.js"
+        },
+    {
+        "type": "node",
+        "request": "launch",
+        "name": "es_query",
+        "program": "${workspaceFolder}/es_query.js"
+    },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "test_in",
             "program": "${workspaceFolder}/test_in.js"
         },

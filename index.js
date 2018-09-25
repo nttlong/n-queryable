@@ -2,6 +2,7 @@ var e=require("./expr");
 var sync=require("./sync");
 var mg=require("mongodb");
 var aggr=require("./aggr");
+var utils=require("./utitls");
 global.__q_coll_database__={};
 
 function connect(uri,cb){
@@ -74,7 +75,7 @@ coll.prototype.item = function (cb) {
     else return sync.sync(exec, []);
 };
 coll.prototype.insert=function(data,cb){
-    this.__insert=data;
+    this.__insert=utils.trimData(data);
     this.__set = undefined;
     return this;
     
@@ -141,6 +142,7 @@ coll.prototype.commit=function(cb){
     else return sync.sync(exec, []);
 };
 coll.prototype.set=function(data){
+    data=utils.trimData(data);
     var me=this;
     if(!me.__set){
         me.__set = {};
@@ -154,6 +156,7 @@ coll.prototype.set=function(data){
     return this;
 };
 coll.prototype.push=function(data){
+    data=utils.trimData(data);
     this.__push=data;
     return this;
 };
