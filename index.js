@@ -2,7 +2,7 @@ var e=require("./expr");
 var sync=require("./sync");
 var mg=require("mongodb");
 var aggr=require("./aggr");
-var utils=require("./utitls");
+var utils=require("./utils");
 global.__q_coll_database__={};
 
 function connect(uri,cb){

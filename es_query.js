@@ -1,6 +1,6 @@
 //https://n1rlchusq2:43a7ycvgmb@app-name-nttlong-8709556953.eu-west-1.bonsaisearch.net
 var elasticsearch=require('elasticsearch');
-var utils=require("./utitls");
+var utils=require("./utils");
 var sync=require("./sync");
 function connect(key,urls){
     if(!global.__es_query_connections){
@@ -103,7 +103,7 @@ function getAll(key,index,type,cb){
 
             if (response.hits.total !== allRecords.length) {
                 // now we can call scroll over and over
-                client.scroll({
+                getClient(key).scroll({
                 scrollId: response._scroll_id,
                 scroll: '10s'
                 }, getMoreUntilDone);
@@ -151,7 +151,22 @@ function deleteIndex(key,index,cb){
     else {
         return sync.sync(exec,[]);
     }
-}
+};
+function isExist(key,index,cb){
+    function exec(cb){
+        getClient(key).indices.exists({
+            index: index
+        }).then(function(r){
+            cb(undefined,r);
+        }).catch(function(e){
+            cb(e);
+        });
+    }
+    if(cb) exec(cb);
+    else {
+        return sync.sync(exec,[]);
+    }
+};
 module.exports = {
     connect:connect,
     check:check,
@@ -161,5 +176,6 @@ module.exports = {
     search:search,
     getAll:getAll,
     createIndex:createIndex,
-    deleteIndex:deleteIndex
+    deleteIndex:deleteIndex,
+    isExist:isExist
 }
