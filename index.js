@@ -5,6 +5,7 @@ var aggr=require("./aggr");
 var utils=require("./utils");
 var models=require("./models");
 var applyAll=require("./model_validator").applyAll;
+var errors=require("./errors");
 global.__q_coll_database__={};
 global.__mongoose_connections__={};
 global.__mongoose_uri_connections__={};
@@ -26,7 +27,7 @@ function validateData(model,validators,data){
             }
         }
         if(ret.code){
-            return ret;
+            return new errors.RequiredFields(ret.message,ret.fields);
         }
     }
     var keys=Object.keys(data||{});
@@ -180,13 +181,11 @@ coll.prototype.commit=function(cb){
                 me.db.collection(me.name).insertOne(data, function (e, r) {
                     if(e.code==121){
                         var retError=validateData(me.createInstance(),me.getInfo().options.validator||{},data);
-                        if(retError){
-                            var err=new Error(retError.message);
-                            err.info=retError;
-                            cb(err);
+                        if(retError instanceof errors.RequiredFields){
+                            cb(retError);
                             return;
                         }
-                        
+                        cb(e);
                     }
                     if (e) cb(e);
                     else {
@@ -353,5 +352,7 @@ module.exports ={
     createValidator:require("./model_validator").create,
     applyAllValidators:require("./model_validator").applyAll,
     getConnect:getConnect,
-    schema:models.schema
+    schema:models.schema,
+    errors:require("./errors")
+    
 }

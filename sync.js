@@ -31,10 +31,7 @@ function sync(fn, args, cb) {
             return result === undefined;
         });
         if (result.error) {
-            var ex=new Error(result.error.message||"");
-            ex.stack=result.error;
-            throw (ex);
-            
+            throw (result.error);
         }
         else {
             return result.result;
