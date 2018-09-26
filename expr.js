@@ -402,7 +402,13 @@ function filter(expr, params) {
         }
     }
     var x = mathjs.parse(_expr);
-    return exp_mongo(x,params);
+    var ret= exp_mongo(x,params);
+    if(ret==expr){
+        if(ret[0]!="$"){
+            ret="$"+ret;
+        }
+    }
+    return ret;
 }
 function vertExprAndParams(expr, params) {
     var regExIndex = /\[([^\]\[]+)\]/i;
