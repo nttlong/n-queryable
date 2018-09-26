@@ -3,8 +3,13 @@ var sync=require("./sync");
 var mg=require("mongoose");
 var aggr=require("./aggr");
 var utils=require("./utils");
+var models=require("./models");
 var applyAll=require("./model_validator").applyAll;
 global.__q_coll_database__={};
+global.__mongoose_connections__={};
+global.__mongoose_uri_connections__={};
+global.__mongoose_names_connections__={};
+global.__mongodb_validators_has_created__={};
 function getVersion(key,cb){
     function exec(cb){
         global.__q_coll_database__[key].eval("function(){return db.version();}",cb);
@@ -14,10 +19,35 @@ function getVersion(key,cb){
         return sync.sync(exec,[]);
     }
 }
+function getConnect(){
+    var key,uri,cb;
+    key =arguments[0];
+    if(arguments.length>1){
+        uri=arguments[1];
+    }
+    if(arguments.length===3){
+        cb=arguments[2];
+    }
+    function exec(cb){
+        if(global.__mongoose_connections__[key]){
+            cb(undefined,global.__mongoose_connections__[key]);
+            return;
+        }
+        mg.connect(uri).then(function (cnn) {
+            global.__mongoose_connections__[key]=cnn;
+            cb(null,cnn);
+        }).catch(function(ex){
+            cb(ex);
+        });
+    }
+    if(cb) exec(cb);
+    else return sync.sync(exec,[]);
+}
 function connect(uri,cb){
     function exec(cb){
         mg.connect(uri).then(function (cnn) {
             var db=cnn.connection.db;
+            db.___cnn=cnn;
             cb(null,db);
         }).catch(function(ex){
             cb(ex);
@@ -36,8 +66,22 @@ function db(name,uri){
     }
 }
 function coll(_db,name){
+    
     if(typeof _db=="string"){
         _db=db(_db);
+        this._cnn=_db.___cnn;
+    }
+    if(!global.__mongodb_validators_has_created__[name]){
+        var cmd=models.getValidator(name);
+        if(cmd){
+            function create_validator(cb){
+                _db.eval("db.runCommand("+JSON.stringify(cmd)+")",function(e,r){
+                    cb(e,r);
+                });
+            }
+            sync.sync(create_validator,[])
+        }
+           
     }
     this.db = _db;
     this.name=name;
@@ -249,7 +293,10 @@ coll.prototype.getInfo=function(cb){
         return sync.sync(exec,[]);
     }
 };
+coll.prototype.create=function(){
+    return models.create(this._cnn,models.getModelNameByCollectionName(this.name));
 
+}
 module.exports ={
     coll:function(db,name){
         return new coll(db,name);
@@ -266,6 +313,7 @@ module.exports ={
     },
     getVersion:getVersion,
     createValidator:require("./model_validator").create,
-    applyAllValidators:require("./model_validator").applyAll
-
+    applyAllValidators:require("./model_validator").applyAll,
+    getConnect:getConnect,
+    schema:models.schema
 }
