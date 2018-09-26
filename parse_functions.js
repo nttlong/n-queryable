@@ -1,4 +1,4 @@
-var mongo=require("mongodb");
+// var mongo=require("mongodb");
 
 function parse_contains(fx,params,prefix,parseToMongo){
     var ret={};

@@ -13,7 +13,7 @@ function connect(key,urls){
     }
 }
 function getCnnNames(){
-    return Object.keys(lobal.__es_query_connections);
+    return Object.keys(global.__es_query_connections);
 }
 function getClient(key){
     return global.__es_query_connections[key];

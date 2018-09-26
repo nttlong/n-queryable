@@ -1,15 +1,23 @@
 var e=require("./expr");
 var sync=require("./sync");
-var mg=require("mongodb");
+var mg=require("mongoose");
 var aggr=require("./aggr");
 var utils=require("./utils");
-
+var applyAll=require("./model_validator").applyAll;
 global.__q_coll_database__={};
-
+function getVersion(key,cb){
+    function exec(cb){
+        global.__q_coll_database__[key].eval("function(){return db.version();}",cb);
+    }
+    if(cb) exec(cb);
+    else {
+        return sync.sync(exec,[]);
+    }
+}
 function connect(uri,cb){
     function exec(cb){
         mg.connect(uri).then(function (cnn) {
-            var db=cnn.db(uri.split('/')[uri.split('/').length-1]);
+            var db=cnn.connection.db;
             cb(null,db);
         }).catch(function(ex){
             cb(ex);
@@ -202,6 +210,45 @@ coll.prototype.delete=function(cb){
 coll.prototype.aggregate=function(){
     return aggr(this.db,this.name);
 };
+coll.prototype.createIndex=function(){
+    var keys,options,cb;
+    keys=arguments[0];
+    if(arguments.length==2){
+        cb=arguments[1];
+    }
+    if(arguments.length==3){
+        options=arguments[1];
+        cb=arguments[2];
+    }
+    var me=this;
+    function exec(cb){
+        me.db.collection(me.name).createIndex(keys,options,cb)
+    }
+    if(cb) exec(cb);
+    else {
+        return sync.sync(exec,[]);
+    }
+};
+coll.prototype.getInfo=function(cb){
+    var me=this;
+    function exec(cb){
+        me.db.eval('db.getCollectionInfos({name:"'+me.name+'"})',function(e,r){
+            if(e) cb(e);
+            else {
+                if(r.length==0){
+                    cb(undefined,{});
+                }
+                else {
+                    cb(undefined,r[0]);
+                }
+            }
+        });
+    }
+    if(cb) exec(cb);
+    else {
+        return sync.sync(exec,[]);
+    }
+};
 
 module.exports ={
     coll:function(db,name){
@@ -216,6 +263,9 @@ module.exports ={
     esConnect:function(key,urls){
         var ES=require("./es");
         return ES.connect(key,urls);
-    }
+    },
+    getVersion:getVersion,
+    createValidator:require("./model_validator").create,
+    applyAllValidators:require("./model_validator").applyAll
 
 }
