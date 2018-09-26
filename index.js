@@ -10,6 +10,30 @@ global.__mongoose_connections__={};
 global.__mongoose_uri_connections__={};
 global.__mongoose_names_connections__={};
 global.__mongodb_validators_has_created__={};
+function validateData(model,validators,data){
+    var ret={
+        code:undefined,
+        fields:[]
+    }
+    if(validators.$jsonSchema && validators.$jsonSchema.required){
+        for(var i=0;i<validators.$jsonSchema.required.length;i++){
+            var val=model.getValue(validators.$jsonSchema.required[i]);
+            if(val==undefined || val==null){
+                ret.code="required";
+                ret.fields.push(validators.$jsonSchema.required[i])
+
+            }
+        }
+        if(ret.code){
+            return ret;
+        }
+    }
+    var keys=Object.keys(data||{});
+    for(var i=0;i<keys.length;i++){
+        model[keys[i]]=data[keys[i]];
+    }
+    return model.validateSync();
+}
 function getVersion(key,cb){
     function exec(cb){
         global.__q_coll_database__[key].eval("function(){return db.version();}",cb);
@@ -153,6 +177,9 @@ coll.prototype.commit=function(cb){
             }
             else {
                 me.db.collection(me.name).insertOne(data, function (e, r) {
+                    if(e.code==121){
+                        var retError=validateData(me.createInstance(),me.getInfo().options.validator||{},data);
+                    }
                     if (e) cb(e);
                     else {
                         data._id = r.insertedId;
@@ -185,6 +212,9 @@ coll.prototype.commit=function(cb){
 
                 cb(null,r);
             }).catch(function(e){
+                if(e.code==121){
+                    var x=validateData(me.createInstance(),data);
+                }
                 cb(e);
             });
             
@@ -293,7 +323,7 @@ coll.prototype.getInfo=function(cb){
         return sync.sync(exec,[]);
     }
 };
-coll.prototype.create=function(){
+coll.prototype.createInstance=function(){
     return models.create(this._cnn,models.getModelNameByCollectionName(this.name));
 
 }

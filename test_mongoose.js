@@ -23,11 +23,13 @@ query.schema("test001","test.test001",{
         required:true
     }
 });
-var x=query.coll("main","test.test001").create();
-x.save({}).then(r=>{
-    console.log(r);
-})
-var c=x;
+
+var x=query.coll("main","test.test001");
+var ret=x.insert({info:null}).commit();
+// x.save({}).then(r=>{
+//     console.log(r);
+// })
+// var c=x;
 // query.schema({
 //     title:String,
 //     author:string,
