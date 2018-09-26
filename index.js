@@ -20,6 +20,7 @@ function validateData(model,validators,data){
             var val=model.getValue(validators.$jsonSchema.required[i]);
             if(val==undefined || val==null){
                 ret.code="required";
+                ret.message="Fields are missing"
                 ret.fields.push(validators.$jsonSchema.required[i])
 
             }
@@ -179,6 +180,13 @@ coll.prototype.commit=function(cb){
                 me.db.collection(me.name).insertOne(data, function (e, r) {
                     if(e.code==121){
                         var retError=validateData(me.createInstance(),me.getInfo().options.validator||{},data);
+                        if(retError){
+                            var err=new Error(retError.message);
+                            err.info=retError;
+                            cb(err);
+                            return;
+                        }
+                        
                     }
                     if (e) cb(e);
                     else {

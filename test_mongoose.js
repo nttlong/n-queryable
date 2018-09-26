@@ -25,7 +25,12 @@ query.schema("test001","test.test001",{
 });
 
 var x=query.coll("main","test.test001");
-var ret=x.insert({info:null}).commit();
+try {
+    var ret=x.insert({info:null}).commit();    
+} catch (error) {
+    var x=error;
+}
+
 // x.save({}).then(r=>{
 //     console.log(r);
 // })
