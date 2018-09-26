@@ -27,7 +27,7 @@ function validateData(model,validators,data){
             }
         }
         if(ret.code){
-            return new errors.RequiredFields(ret.message,ret.fields);
+            return ret;
         }
     }
     var keys=Object.keys(data||{});
@@ -179,13 +179,14 @@ coll.prototype.commit=function(cb){
             }
             else {
                 me.db.collection(me.name).insertOne(data, function (e, r) {
-                    if(e.code==121){
+                    if(e && e.code==121){
                         var retError=validateData(me.createInstance(),me.getInfo().options.validator||{},data);
-                        if(retError instanceof errors.RequiredFields){
-                            cb(retError);
+                        if(retError && retError.code=="required"){
+                            var err=new  errors.MissingFields(retError.message,retError.fields);
+                            cb(err);
                             return;
                         }
-                        cb(e);
+                        
                     }
                     if (e) cb(e);
                     else {

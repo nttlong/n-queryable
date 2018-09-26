@@ -51,8 +51,10 @@ aggr.prototype.unwind = function (field, preserveNullAndEmptyArrays){
         preserveNullAndEmptyArrays=false;
     }
     this.__pipe.push({
-        path: "$" + field,
-        preserveNullAndEmptyArrays: preserveNullAndEmptyArrays
+        $unwind:{
+            path: "$" + field,
+            preserveNullAndEmptyArrays: preserveNullAndEmptyArrays
+        }
     });
     return this;
 };
@@ -84,9 +86,10 @@ aggr.prototype.skip=function(num){
     );
     return this;
 };
-aggr.prototype.lookup=function(source,localField,foreignField,alias){
+aggr.prototype.lookup=function(form,localField,foreignField,alias){
     var lookup={};
-    lookup.source=source;
+    lookup.from = form;
+   // lookup.from=this.name;
     lookup.localField=localField;
     lookup.foreignField = foreignField;
     lookup["as"]=alias;

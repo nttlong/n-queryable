@@ -1,8 +1,8 @@
-function RequiredFields(message,fields){
+function MissingFields(message,fields){
     Error.call(message);
     this.fields=fields;
-    this.code="requiredFields";
+    this.code="missingFields";
 }
 module.exports={
-    RequiredFields: RequiredFields
-};
+    MissingFields:MissingFields
+}
